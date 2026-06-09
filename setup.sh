@@ -19,20 +19,15 @@ echo "[dji] Setting up $MODEL environment (Python $PYVER)..."
 $PIP install -q "numpy==1.26.4"
 
 if [[ "$MODEL" == "yolov8" ]]; then
-    # torch 2.0.0+cu118 — installed via direct URL because pip index no longer lists <2.2.0
-    # wheels exist for cp310 and cp311 only; cp312 is not supported by torch 2.0.0
-    if [[ "$PYVER" == "cp312" ]]; then
-        echo "[dji] ERROR: torch==2.0.0 has no wheel for Python 3.12. Use Python 3.10 or 3.11." >&2
-        exit 1
-    fi
+    # torch 2.2.0+cu118 — oldest version with cp312 support
     TORCH_BASE="https://download.pytorch.org/whl/cu118"
     $PIP install -q \
-        "${TORCH_BASE}/torch-2.0.0%2Bcu118-${PYVER}-${PYVER}-linux_x86_64.whl" \
-        "${TORCH_BASE}/torchvision-0.15.0%2Bcu118-${PYVER}-${PYVER}-linux_x86_64.whl"
+        "${TORCH_BASE}/torch-2.2.0%2Bcu118-${PYVER}-${PYVER}-linux_x86_64.whl" \
+        "${TORCH_BASE}/torchvision-0.17.0%2Bcu118-${PYVER}-${PYVER}-linux_x86_64.whl"
 
-    # mmcv 2.0.1 — exact version required for torch 2.0.0
+    # mmcv 2.2.0 — matches torch 2.2.0; mmyolo version check patched to allow <2.3.0
     $PIP install -q \
-        "https://download.openmmlab.com/mmcv/dist/cu118/torch2.0.0/mmcv-2.0.1-${PYVER}-${PYVER}-manylinux1_x86_64.whl"
+        "https://download.openmmlab.com/mmcv/dist/cu118/torch2.2.0/mmcv-2.2.0-${PYVER}-${PYVER}-manylinux1_x86_64.whl"
 
     # mmengine + mmdet
     $PIP install -q mmengine "mmdet>=3.0.0,<4.0.0"
