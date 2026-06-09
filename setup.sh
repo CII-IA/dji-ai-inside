@@ -15,9 +15,6 @@ fi
 PYVER=$(python3 -c "import sys; print(f'cp{sys.version_info.major}{sys.version_info.minor}')")
 echo "[dji] Setting up $MODEL environment (Python $PYVER)..."
 
-# numpy < 2 must come before torch
-$PIP install -q "numpy==1.26.4"
-
 if [[ "$MODEL" == "yolov8" ]]; then
     # torch 2.2.0+cu118 — oldest version with cp312 support
     TORCH_BASE="https://download.pytorch.org/whl/cu118"
@@ -31,6 +28,11 @@ if [[ "$MODEL" == "yolov8" ]]; then
 
     # mmengine + mmdet
     $PIP install -q mmengine "mmdet>=3.0.0,<4.0.0"
+
+    # Patch mmdet: it hard-checks mmcv < 2.2.0, but 2.2.0 is the only wheel available for cu118/torch2.2
+    MMDET_INIT=$(python3 -c "import mmdet, os; print(os.path.join(os.path.dirname(mmdet.__file__), '__init__.py'))")
+    sed -i "s/mmcv_maximum_version = '2.2.0'/mmcv_maximum_version = '2.3.0'/" "$MMDET_INIT"
+    echo "[dji] patched mmdet: mmcv_maximum_version -> 2.3.0"
 
     # mmyolo — requires --no-build-isolation (setup.py imports torch at build time)
     $PIP install -q "$HERE/mmyolo_src" --no-build-isolation
