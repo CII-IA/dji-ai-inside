@@ -35,6 +35,13 @@ if [[ "$MODEL" == "yolov8" ]]; then
     sed -i "s/mmcv_maximum_version = '2.2.0'/mmcv_maximum_version = '2.3.0'/" "$MMDET_INIT"
     echo "[dji] patched mmdet: mmcv_maximum_version -> 2.3.0"
 
+    # Patch mmdet.evaluation.metrics: crowdhuman_metric.py imports scipy which breaks on numpy 2.0.x
+    # (scipy requires numpy>=2.1 but torch 2.2+cu118 ships with numpy 2.0.x). CrowdHumanMetric is
+    # not used in YOLOv8 training or inference.
+    MMDET_METRICS=$(python3 -c "import importlib.util; s = importlib.util.find_spec('mmdet.evaluation.metrics'); print(s.origin)")
+    sed -i "s/from .crowdhuman_metric import CrowdHumanMetric/# from .crowdhuman_metric import CrowdHumanMetric  # disabled: scipy\/numpy conflict/" "$MMDET_METRICS"
+    echo "[dji] patched mmdet.evaluation.metrics: disabled CrowdHumanMetric"
+
     # mmyolo — requires --no-build-isolation (setup.py imports torch at build time)
     $PIP install -q "$HERE/mmyolo_src" --no-build-isolation
 
