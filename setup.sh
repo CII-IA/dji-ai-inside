@@ -29,8 +29,9 @@ if [[ "$MODEL" == "yolov8" ]]; then
     # mmengine + mmdet
     $PIP install -q mmengine "mmdet>=3.0.0,<4.0.0"
 
-    # Patch mmdet: it hard-checks mmcv < 2.2.0, but 2.2.0 is the only wheel available for cu118/torch2.2
-    MMDET_INIT=$(python3 -c "import mmdet, os; print(os.path.join(os.path.dirname(mmdet.__file__), '__init__.py'))")
+    # Patch mmdet: it hard-checks mmcv < 2.2.0, but 2.2.0 is the only wheel available for cu118/torch2.2.
+    # Use find_spec (does not execute the module) — importing mmdet directly triggers the assert we're fixing.
+    MMDET_INIT=$(python3 -c "import importlib.util; s = importlib.util.find_spec('mmdet'); print(s.origin)")
     sed -i "s/mmcv_maximum_version = '2.2.0'/mmcv_maximum_version = '2.3.0'/" "$MMDET_INIT"
     echo "[dji] patched mmdet: mmcv_maximum_version -> 2.3.0"
 
