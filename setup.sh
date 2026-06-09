@@ -29,21 +29,37 @@ if [[ "$MODEL" == "yolov8" ]]; then
     # mmengine + mmdet
     $PIP install -q mmengine "mmdet>=3.0.0,<4.0.0"
 
-    # Patch mmdet: it hard-checks mmcv < 2.2.0, but 2.2.0 is the only wheel available for cu118/torch2.2.
-    # Use find_spec (does not execute the module) — importing mmdet directly triggers the assert we're fixing.
-    MMDET_INIT=$(python3 -c "import importlib.util; s = importlib.util.find_spec('mmdet'); print(s.origin)")
-    sed -i "s/mmcv_maximum_version = '2.2.0'/mmcv_maximum_version = '2.3.0'/" "$MMDET_INIT"
-    echo "[dji] patched mmdet: mmcv_maximum_version -> 2.3.0"
-
-    # Patch mmdet.evaluation.metrics: crowdhuman_metric.py imports scipy which breaks on numpy 2.0.x
-    # (scipy requires numpy>=2.1 but torch 2.2+cu118 ships with numpy 2.0.x). CrowdHumanMetric is
-    # not used in YOLOv8 training or inference.
-    # Derive path from mmdet package dir — find_spec('mmdet.evaluation.metrics') would trigger the
-    # broken scipy import chain before we can patch it.
+    # Apply all mmdet patches via a single Python script that only does file I/O (no mmdet imports).
+    # find_spec('mmdet') locates the package dir without executing any __init__.py.
     MMDET_DIR=$(python3 -c "import importlib.util, os; s = importlib.util.find_spec('mmdet'); print(os.path.dirname(s.origin))")
-    MMDET_METRICS="$MMDET_DIR/evaluation/metrics/__init__.py"
-    sed -i "s/from .crowdhuman_metric import CrowdHumanMetric/# from .crowdhuman_metric import CrowdHumanMetric  # disabled: scipy\/numpy conflict/" "$MMDET_METRICS"
-    echo "[dji] patched mmdet.evaluation.metrics: disabled CrowdHumanMetric"
+    python3 - "$MMDET_DIR" <<'PYEOF'
+import sys, os
+
+d = sys.argv[1]
+
+# 1. mmdet/__init__.py: accept mmcv 2.2.0 (default hard-check is <2.2.0)
+p = os.path.join(d, '__init__.py')
+src = open(p).read()
+src = src.replace("mmcv_maximum_version = '2.2.0'", "mmcv_maximum_version = '2.3.0'")
+open(p, 'w').write(src)
+print('[dji] patched mmdet: mmcv_maximum_version -> 2.3.0')
+
+# 2. mmdet/evaluation/metrics/__init__.py: remove CrowdHumanMetric
+#    crowdhuman_metric.py imports scipy which requires numpy>=2.1 but torch 2.2+cu118
+#    lands on numpy 2.0.x. CrowdHumanMetric is unused in YOLOv8 training/inference.
+#    Must remove both the import line AND the __all__ entry, or `from .metrics import *`
+#    raises AttributeError when it can't find the name in the module.
+p = os.path.join(d, 'evaluation', 'metrics', '__init__.py')
+src = open(p).read()
+src = src.replace(
+    'from .crowdhuman_metric import CrowdHumanMetric\n',
+    ''
+)
+src = src.replace("'CrowdHumanMetric', ", "")
+src = src.replace(", 'CrowdHumanMetric'", "")
+open(p, 'w').write(src)
+print('[dji] patched mmdet.evaluation.metrics: removed CrowdHumanMetric')
+PYEOF
 
     # mmyolo — requires --no-build-isolation (setup.py imports torch at build time)
     $PIP install -q "$HERE/mmyolo_src" --no-build-isolation
