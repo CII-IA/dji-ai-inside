@@ -12,19 +12,27 @@ if [[ "$MODEL" != "yolov8" && "$MODEL" != "hrnet" ]]; then
     exit 1
 fi
 
-echo "[dji] Setting up $MODEL environment..."
+PYVER=$(python3 -c "import sys; print(f'cp{sys.version_info.major}{sys.version_info.minor}')")
+echo "[dji] Setting up $MODEL environment (Python $PYVER)..."
 
 # numpy < 2 must come before torch
 $PIP install -q "numpy==1.26.4"
 
 if [[ "$MODEL" == "yolov8" ]]; then
-    # torch 2.0.0 + cu118 (works on CUDA 11.x and 12.x)
-    $PIP install -q torch==2.0.0 torchvision==0.15.0 \
-        --index-url https://download.pytorch.org/whl/cu118
+    # torch 2.0.0+cu118 — installed via direct URL because pip index no longer lists <2.2.0
+    # wheels exist for cp310 and cp311 only; cp312 is not supported by torch 2.0.0
+    if [[ "$PYVER" == "cp312" ]]; then
+        echo "[dji] ERROR: torch==2.0.0 has no wheel for Python 3.12. Use Python 3.10 or 3.11." >&2
+        exit 1
+    fi
+    TORCH_BASE="https://download.pytorch.org/whl/cu118"
+    $PIP install -q \
+        "${TORCH_BASE}/torch-2.0.0%2Bcu118-${PYVER}-${PYVER}-linux_x86_64.whl" \
+        "${TORCH_BASE}/torchvision-0.15.0%2Bcu118-${PYVER}-${PYVER}-linux_x86_64.whl"
 
     # mmcv 2.0.1 — exact version required for torch 2.0.0
     $PIP install -q \
-        https://download.openmmlab.com/mmcv/dist/cu118/torch2.0.0/mmcv-2.0.1-cp310-cp310-manylinux1_x86_64.whl
+        "https://download.openmmlab.com/mmcv/dist/cu118/torch2.0.0/mmcv-2.0.1-${PYVER}-${PYVER}-manylinux1_x86_64.whl"
 
     # mmengine + mmdet
     $PIP install -q mmengine "mmdet>=3.0.0,<4.0.0"
@@ -38,13 +46,15 @@ if [[ "$MODEL" == "yolov8" ]]; then
     echo "[dji] Train:  cd $HERE/mmyolo_src && DATA_ROOT=/path/to/dataset python tools/train.py configs/yolov8/yolov8_s_syncbn_fast_8xb16-500e_coco.py --work-dir <work_dir>"
 
 elif [[ "$MODEL" == "hrnet" ]]; then
-    # torch 2.1.0 + cu121
-    $PIP install -q torch==2.1.0 torchvision==0.16.0 \
-        --index-url https://download.pytorch.org/whl/cu121
+    # torch 2.1.0+cu121 — installed via direct URL for same reason as yolov8
+    TORCH_BASE="https://download.pytorch.org/whl/cu121"
+    $PIP install -q \
+        "${TORCH_BASE}/torch-2.1.0%2Bcu121-${PYVER}-${PYVER}-linux_x86_64.whl" \
+        "${TORCH_BASE}/torchvision-0.16.0%2Bcu121-${PYVER}-${PYVER}-linux_x86_64.whl"
 
     # mmcv 2.2.0 — exact version required for torch 2.1.0
     $PIP install -q \
-        https://download.openmmlab.com/mmcv/dist/cu121/torch2.1.0/mmcv-2.2.0-cp310-cp310-manylinux1_x86_64.whl
+        "https://download.openmmlab.com/mmcv/dist/cu121/torch2.1.0/mmcv-2.2.0-${PYVER}-${PYVER}-manylinux1_x86_64.whl"
 
     # mmengine
     $PIP install -q mmengine
