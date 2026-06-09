@@ -35,7 +35,7 @@ if [[ "$MODEL" == "yolov8" ]]; then
     echo ""
     echo "[dji] mmyolo ready."
     echo "[dji] Source: $HERE/mmyolo_src"
-    echo "[dji] Train:  cd $HERE/mmyolo_src && python tools/train.py configs/yolov8/yolov8_s_syncbn_fast_8xb16-500e_coco.py --work-dir <work_dir>"
+    echo "[dji] Train:  cd $HERE/mmyolo_src && DATA_ROOT=/path/to/dataset python tools/train.py configs/yolov8/yolov8_s_syncbn_fast_8xb16-500e_coco.py --work-dir <work_dir>"
 
 elif [[ "$MODEL" == "hrnet" ]]; then
     # torch 2.1.0 + cu121
@@ -55,7 +55,7 @@ elif [[ "$MODEL" == "hrnet" ]]; then
     echo ""
     echo "[dji] mmseg ready."
     echo "[dji] Source: $HERE/mmseg_src"
-    echo "[dji] Train:  cd $HERE/mmseg_src && python tools/train.py configs/hrnet/fcn_hr18s_4xb2-160k_cityscapes-832x832.py --work-dir <work_dir>"
+    echo "[dji] Train:  cd $HERE/mmseg_src && DATA_ROOT=/path/to/dataset python tools/train.py configs/hrnet/fcn_hr18s_4xb2-160k_cityscapes-832x832.py --work-dir <work_dir>"
 fi
 
 echo "[dji] Verify: python3 -c \"import mmyolo; print(mmyolo.__version__)\""

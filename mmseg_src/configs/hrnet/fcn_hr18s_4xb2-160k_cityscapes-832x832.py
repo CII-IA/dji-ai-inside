@@ -3,7 +3,8 @@ max_iters = 20000                                                          # 训
 ckpt_interval = 4000                                                       # 训练保存迭代间隔
 val_interval = 4000                                                        # 训练验证迭代间隔
 dataset_type = 'CityscapesDataset'                                          # 这里以 CityscapesDataset 训练数据为例
-data_root= '/home/orlando/Documentos/datasets/spacelab/perimeter_dataset'
+import os
+data_root = os.environ['DATA_ROOT']  # set via: DATA_ROOT=/path/to/dataset python tools/train.py ...
 work_dir = '../your_train_exp/exp_fcn_hr18s_4xb2-160k_cityscapes-832x832'   # 指定训练结果路径
 classes=('terrain', 'fence')
 palette=[[190, 153, 153], [50, 220, 120]]

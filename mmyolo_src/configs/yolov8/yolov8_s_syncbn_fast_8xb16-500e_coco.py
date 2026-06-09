@@ -2,7 +2,8 @@ _base_ = ['../_base_/default_runtime.py', '../_base_/det_p5_tta.py']
 
 # ========================Frequently modified parameters======================
 # -----data related-----
-data_root = '/home/orlando/Documentos/datasets/semantic_drone_dataset/drone_detection/'  # Root path of data
+import os
+data_root = os.environ['DATA_ROOT']  # set via: DATA_ROOT=/path/to/dataset python tools/train.py ...
 # Path of train annotation file
 train_ann_file = 'annotations/instances_train.json'
 train_data_prefix = 'images/train/'  # Prefix of train image path

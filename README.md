@@ -55,6 +55,7 @@ numpy==1.26.4 is always installed first (must be < 2 before torch).
 
 ```bash
 cd /content/dji-ai-inside/mmyolo_src
+DATA_ROOT=/content/drive/MyDrive/my_dataset \
 python tools/train.py \
     configs/yolov8/yolov8_s_syncbn_fast_8xb16-500e_coco.py \
     --work-dir /content/work_dirs/my_model
@@ -64,6 +65,7 @@ python tools/train.py \
 
 ```bash
 cd /content/dji-ai-inside/mmseg_src
+DATA_ROOT=/content/drive/MyDrive/my_dataset \
 python tools/train.py \
     configs/hrnet/fcn_hr18s_4xb2-160k_cityscapes-832x832.py \
     --work-dir /content/work_dirs/my_model
