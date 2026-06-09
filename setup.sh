@@ -59,6 +59,15 @@ src = src.replace("'CrowdHumanMetric', ", "")
 src = src.replace(", 'CrowdHumanMetric'", "")
 open(p, 'w').write(src)
 print('[dji] patched mmdet.evaluation.metrics: removed CrowdHumanMetric')
+
+# 3. mmdet/models/utils/vlfuse_helper.py: the transformers import guard uses
+#    `except ImportError` but newer Colab transformers raises NameError when
+#    loaded with torch<2.4. Broaden to Exception so the guard works.
+p = os.path.join(d, 'models', 'utils', 'vlfuse_helper.py')
+src = open(p).read()
+src = src.replace('except ImportError:', 'except Exception:')
+open(p, 'w').write(src)
+print('[dji] patched mmdet vlfuse_helper: broadened transformers import guard')
 PYEOF
 
     # mmyolo — requires --no-build-isolation (setup.py imports torch at build time)
