@@ -38,7 +38,10 @@ if [[ "$MODEL" == "yolov8" ]]; then
     # Patch mmdet.evaluation.metrics: crowdhuman_metric.py imports scipy which breaks on numpy 2.0.x
     # (scipy requires numpy>=2.1 but torch 2.2+cu118 ships with numpy 2.0.x). CrowdHumanMetric is
     # not used in YOLOv8 training or inference.
-    MMDET_METRICS=$(python3 -c "import importlib.util; s = importlib.util.find_spec('mmdet.evaluation.metrics'); print(s.origin)")
+    # Derive path from mmdet package dir — find_spec('mmdet.evaluation.metrics') would trigger the
+    # broken scipy import chain before we can patch it.
+    MMDET_DIR=$(python3 -c "import importlib.util, os; s = importlib.util.find_spec('mmdet'); print(os.path.dirname(s.origin))")
+    MMDET_METRICS="$MMDET_DIR/evaluation/metrics/__init__.py"
     sed -i "s/from .crowdhuman_metric import CrowdHumanMetric/# from .crowdhuman_metric import CrowdHumanMetric  # disabled: scipy\/numpy conflict/" "$MMDET_METRICS"
     echo "[dji] patched mmdet.evaluation.metrics: disabled CrowdHumanMetric"
 
