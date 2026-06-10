@@ -26,9 +26,6 @@ if [[ "$MODEL" == "yolov8" ]]; then
     $PIP install -q \
         "https://download.openmmlab.com/mmcv/dist/cu118/torch2.2.0/mmcv-2.2.0-${PYVER}-${PYVER}-manylinux1_x86_64.whl"
 
-    # numpy<2 required: torch 2.2.0 was compiled against numpy 1.x
-    $PIP install -q "numpy<2"
-
     # mmengine + mmdet
     $PIP install -q mmengine "mmdet>=3.0.0,<4.0.0"
 
@@ -76,6 +73,10 @@ PYEOF
     # mmyolo — requires --no-build-isolation (setup.py imports torch at build time)
     $PIP install -q "$HERE/mmyolo_src" --no-build-isolation
 
+    # numpy<2 pinned last: torch 2.2.0 C bindings require numpy 1.x;
+    # mmengine/mmdet reinstall numpy 2.x so this must come after everything else.
+    $PIP install -q "numpy<2"
+
     echo ""
     echo "[dji] mmyolo ready."
     echo "[dji] Source: $HERE/mmyolo_src"
@@ -92,14 +93,14 @@ elif [[ "$MODEL" == "hrnet" ]]; then
     $PIP install -q \
         "https://download.openmmlab.com/mmcv/dist/cu121/torch2.1.0/mmcv-2.2.0-${PYVER}-${PYVER}-manylinux1_x86_64.whl"
 
-    # numpy<2 required: torch 2.1.0 was compiled against numpy 1.x
-    $PIP install -q "numpy<2"
-
     # mmengine
     $PIP install -q mmengine
 
     # mmseg — editable install, no --no-build-isolation needed
     $PIP install -q -v -e "$HERE/mmseg_src"
+
+    # numpy<2 pinned last: same reason as yolov8 branch
+    $PIP install -q "numpy<2"
 
     echo ""
     echo "[dji] mmseg ready."
