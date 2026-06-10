@@ -117,10 +117,6 @@ def main():
         # if 'runner_type' is set in the cfg
         runner = RUNNERS.build(cfg)
 
-    x = torch.rand(1, 3, 320, 320).cuda()
-    torch.onnx.export(runner.model, x, "./yolov8_test.onnx")
-    torch.save(runner.model.state_dict(), "./yolov8_test.pth")
-
     # start training
     runner.train()
 
