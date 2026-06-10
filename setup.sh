@@ -75,12 +75,16 @@ PYEOF
 
     # numpy<2 pinned last: torch 2.2.0 C bindings require numpy 1.x;
     # mmengine/mmdet reinstall numpy 2.x so this must come after everything else.
-    $PIP install -q "numpy<2"
+    # --no-deps skips the resolver so pip doesn't print conflicts with Colab's numpy>=2 packages.
+    $PIP install -q --no-deps "numpy<2"
 
     echo ""
     echo "[dji] mmyolo ready."
     echo "[dji] Source: $HERE/mmyolo_src"
     echo "[dji] Train:  cd $HERE/mmyolo_src && DATA_ROOT=/path/to/dataset python tools/train.py configs/yolov8/yolov8_s_syncbn_fast_8xb16-500e_coco.py --work-dir <work_dir>"
+    echo "[dji] Note: training and inference (!python ...) already use numpy 1.26.4 — no restart needed."
+    echo "[dji]       To import torch/mmyolo in notebook cells, run this in a new cell and then continue manually:"
+    echo "[dji]         import os; os.kill(os.getpid(), 9)"
 
 elif [[ "$MODEL" == "hrnet" ]]; then
     # torch 2.1.0+cu121 — installed via direct URL for same reason as yolov8
@@ -100,7 +104,7 @@ elif [[ "$MODEL" == "hrnet" ]]; then
     $PIP install -q -v -e "$HERE/mmseg_src"
 
     # numpy<2 pinned last: same reason as yolov8 branch
-    $PIP install -q "numpy<2"
+    $PIP install -q --no-deps "numpy<2"
 
     echo ""
     echo "[dji] mmseg ready."

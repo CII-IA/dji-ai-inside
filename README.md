@@ -33,21 +33,22 @@ git clone --depth 1 https://github.com/YOUR_USER/dji-ai-inside ~/dji-ai-inside
 bash ~/dji-ai-inside/setup.sh yolov8   # or hrnet
 ```
 
-> **Colab note**: if Colab prompts you to restart the runtime after install (torch version change),
-> restart and skip the setup cell on the next run — the packages persist for the session.
+> **Colab note**: training and inference (`!python ...`) work immediately after setup — no restart needed.
+> To import torch/mmyolo directly in notebook cells, run `import os; os.kill(os.getpid(), 9)` in a new
+> cell to restart the kernel (installed packages persist, setup does not need to run again).
 
 ## What the script installs
 
 | | YOLOv8 | HRNet18 |
 |---|---|---|
-| torch | 2.0.0+cu118 | 2.1.0+cu121 |
-| torchvision | 0.15.0 | 0.16.0 |
-| mmcv | 2.0.1 | 2.2.0 |
+| torch | 2.2.0+cu118 | 2.1.0+cu121 |
+| torchvision | 0.17.0 | 0.16.0 |
+| mmcv | 2.2.0 | 2.2.0 |
 | mmengine | latest | latest |
-| mmdet | ≥3.0.0 | — |
+| mmdet | ≥3.0.0,<4.0.0 | — |
 | install mode | `pip install . --no-build-isolation` | `pip install -v -e .` |
 
-numpy==1.26.4 is always installed first (must be < 2 before torch).
+`numpy<2` is pinned after all other installs — torch 2.x C bindings require numpy 1.x.
 
 ## Training
 
@@ -79,7 +80,7 @@ These are locked by the DJI AI Inside platform. Do not change them.
 |---|---|---|
 | Base config | `yolov8_s_syncbn_fast_8xb16-500e_coco.py` only | `fcn_hr18s_4xb2-160k_cityscapes-832x832.py` only |
 | `num_classes` | ≤ 10 | ≤ 5 (including background) |
-| `widen_factor` | `0.5` for 2K · `0.25` for 4K | — |
+| `widen_factor` | `0.25` (4K, default in config) · `0.5` for 2K | — |
 | `act_cfg` | `ReLU` (not SiLU) | — |
 | Checkpoint to submit | `best_coco_bbox_mAP_epoch_*.pth` | `best_mIoU_iter_*.pth` |
 | Device target | Matrice 4D Series | Matrice 4D Series |
