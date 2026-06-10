@@ -26,6 +26,9 @@ if [[ "$MODEL" == "yolov8" ]]; then
     $PIP install -q \
         "https://download.openmmlab.com/mmcv/dist/cu118/torch2.2.0/mmcv-2.2.0-${PYVER}-${PYVER}-manylinux1_x86_64.whl"
 
+    # numpy<2 required: torch 2.2.0 was compiled against numpy 1.x
+    $PIP install -q "numpy<2"
+
     # mmengine + mmdet
     $PIP install -q mmengine "mmdet>=3.0.0,<4.0.0"
 
@@ -88,6 +91,9 @@ elif [[ "$MODEL" == "hrnet" ]]; then
     # mmcv 2.2.0 — exact version required for torch 2.1.0
     $PIP install -q \
         "https://download.openmmlab.com/mmcv/dist/cu121/torch2.1.0/mmcv-2.2.0-${PYVER}-${PYVER}-manylinux1_x86_64.whl"
+
+    # numpy<2 required: torch 2.1.0 was compiled against numpy 1.x
+    $PIP install -q "numpy<2"
 
     # mmengine
     $PIP install -q mmengine
